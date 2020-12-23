@@ -2,7 +2,8 @@
 """
 Created on Fri Dec 18 23:37:39 2020
 
-@author: Captworgen
+@author: Masaya Heywood (Capt/Captworgen)
+
 """
 
 import numpy as np
@@ -96,14 +97,14 @@ outputOfSVDCorr = sp.spearmanr(stuRateS, objRateS)
 
 """
 # #Question 5
-# Call me bold, but schools with a lower proverty rate seem to enjoy a greater acceptance to HSPHS. Once again, unoriginal, I know.
+# Call me bold, but schools with a lower proverty percentage seem to enjoy a greater acceptance to HSPHS. Once again, unoriginal, I know.
 # Alternate Hypothesis: Schools with a lower poverty rate have more students sumbitted to HSPHS.
 # Null Hypothesis: Poverty cannot be confirmed as an impacting factor on admission to HSPHS.
 # According to https://www.childrensdefense.org/, 1 in 6 children lived in poverty in the United States. This comes to around a 15% poverty rate among children. 
 # Knowing the above, I am ranking the poverty of schools into 5 sections. 
 # A school's section is determined by the distance it is from 100 on the poverty observation, measured in increments of 20 (15% might be more precise but 20 makes an easy round to 100).
 # The assumption is that the less poverty in a school, the more likey there are wealthy families in that school.
-(i.e a school's poverty percentage is 44, making it Average')
+(i.e a school's poverty percentage is 44, making it Average since there may be more middle class families there)
  
 """
 from scipy.stats import kruskal
@@ -154,32 +155,33 @@ for each in range(0,5):
 
 povertyNormalStat, povertyNormalP = sp.shapiro(wealth_and_acceptance.loc[(wealth_and_acceptance["Financial Section(Names)"] == "Poverty"), "Rate of Accept"])
 #print(povertyNormalP)
+
 #I heavily doubt this is a normally distributed graph.
-sns.scatterplot(data=schoolsPovHypo, x="Poverty", y="Chance", hue="Financial Section(Names)")
+#sns.scatterplot(data=schoolsPovHypo, x="Poverty", y="Chance", hue="Financial Section(Names)")
 #sns.displot(wealth_and_acceptance.loc[(wealth_and_acceptance["Financial Section(Names)"] == "Wealthy"), "Chance"])
 
 
 #They're not normally distributed, but I don't think that the Kruskal test was far off.
-sns.regplot(x="Poverty", y="Chance", data=schoolsPovHypo)
-plt.clf()
+#sns.regplot(x="Poverty", y="Chance", data=schoolsPovHypo)
+
 
 povertyPearson = sp.pearsonr(schoolsPovHypo["Poverty"], schoolsPovHypo["Chance"])
 
 #print(povertyPearson)
 
-#The graphs and the pearsonr help collaborate the Kruskal test, but the issues are still present with the data. I reject the null hypothesis, but see clear issues with the methods used. 
+#The graphs and the pearsonr help prove the Kruskal test, but the issues are still present with the data. I reject the null hypothesis, but see clear issues with the methods used. 
  
 #---------------------------------------------------------------------------------------
 
 ##Question 6
 #Since I dropped the the class size and spending per pupil when cleaning the data, I decided to base this question around the idea of school size vs poverty
 
-sizePearson = sp.pearsonr(schoolsPovHypo["Size"], schoolsPovHypo["Achievement"])
-# sns.regplot(x="Size", y="Achievement", data=schoolsPovHypo)
+#sizePearson = sp.pearsonr(schoolsPovHypo["Size"], schoolsPovHypo["Achievement"])
+#sns.regplot(x="Size", y="Achievement", data=schoolsPovHypo)
 # plt.clf()
 
-sns.scatterplot(data=schoolsPovHypo, x="Size", y="Achievement", hue="Financial Section(Names)")
-plt.clf()
+#sns.scatterplot(data=schoolsPovHypo, x="Size", y="Achievement", hue="Financial Section(Names)")
+#plt.clf()
 #print(sizePearson)
 
 #School size does have an significant impact either Achievement or Chance
@@ -192,6 +194,11 @@ wealth_and_acceptanceSum = np.zeros(5)
 
 for each in range(0,5):
     wealth_and_acceptanceSum[each] = wealth_and_acceptance.loc[(wealth_and_acceptance["Financial Section(Names)"] == secNames[each]), "Num Accept"].sum()
+    
+#WAAS = pd.DataFrame(wealth_and_acceptanceSum)  
+#WAAS.columns = secNames
+#sns.histplot(data=wealth_and_acceptanceSum)
+#not a good histplot
 
 #print(wealth_and_acceptanceSum)
 #the data looks like it is pretty closely clustered around the poorer schools. Manually looking at the data seems to show that schools with high Asian population have the highest admittance to HSPHS
@@ -203,13 +210,13 @@ mostOtherAccept = schoolsPovHypo.loc[(schoolsPovHypo["Majority Asian"] == False)
 #print(mostAsianAccept, mostOtherAccept)
 #Although majority asian schools do pull in a sizeable amount of acceptances, I think I'm chasing the wrong lead now. Going back to wealth.
 #Many schools have a high poverty rating. Splitting the data in a way different from before may prove useful.
-schoolsPovHypo.loc[(schoolsPovHypo["Poverty"] >= 85), "Exceptional Poverty"] = True
-schoolsPovHypo.loc[(schoolsPovHypo["Poverty"] < 85), "Exceptional Poverty"] = False
+schoolsPovHypo.loc[(schoolsPovHypo["Poverty"] >= 86), "Exceptional Poverty"] = True
+schoolsPovHypo.loc[(schoolsPovHypo["Poverty"] < 86), "Exceptional Poverty"] = False
 mostPovertyAccept = schoolsPovHypo.loc[(schoolsPovHypo["Exceptional Poverty"] == True), "Num Accept"].sum()
 mostWealthyAccept = schoolsPovHypo.loc[(schoolsPovHypo["Exceptional Poverty"] == False), "Num Accept"].sum()
 
 #print(mostPovertyAccept, mostWealthyAccept)
-#There is a clear divide here, exceptionally high poverty is common but amounts to low acceptance totals to HSPHS
+#There is a clear divide here, exceptional poverty is common but amounts to low acceptance totals to HSPHS
 
 #---------------------------------------------------------------------------------------
 
@@ -226,7 +233,7 @@ regr.fit(X, Y)
 print("Intercept: \n", regr.intercept_)
 print("Coefficients: \n", regr.coef_)
 
-# prediction with sklearn
+#prediction with sklearn
 newSchoolPoverty = 15.3
 newSchoolTrust = 4.0
 #print ("Predicted Acceptance Chance: ", regr.predict([[newSchoolPoverty,newSchoolTrust]]))
@@ -245,14 +252,15 @@ for each in range(len(testStudents["Poverty"])):
         testStudents.iloc[each, 2] = 0
 
 #fig, ax = plt.subplots(figsize=a4_dims)
-sns.regplot(data = testStudents, x="Poverty", y="Chance", marker="+")
-sns.regplot(data = schoolsPovHypo, x="Poverty", y="Chance", color="red", marker="+")
+#sns.regplot(data = testStudents, x="Poverty", y="Chance", marker="+")
+#sns.regplot(data = schoolsPovHypo, x="Poverty", y="Chance", color="red", marker="+")
+
 ##The testStudents data (blue) does a good job simulating the actual chance 
 
 
-#Results
+##Results
 #This section show the results of questions above (some questions do not need to be printed)
-showAnswers = False
+showAnswers = True
 if showAnswers == True:  
     print("First Corr:", corr)
     print("Applications Corrs:", outputOfAppCorr)
@@ -261,12 +269,3 @@ if showAnswers == True:
     print("Proportion Test:",mostPovertyAccept, mostWealthyAccept)
 
 
-#then run through the questions
-
-#6 does material resources impact admission to hpshs
-
-#7 proportion of students
-
-#8 model of choice
-
-#9 - 10 overall summary, writing only, remember to make graphs of above
